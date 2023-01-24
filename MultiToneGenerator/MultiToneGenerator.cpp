@@ -145,6 +145,7 @@ std::vector<tagTONE>	get_tone_standard_imd();
 std::vector<tagTONE>	get_tone_piano88();
 std::vector<tagTONE>	get_tone_piano88_ACDF();
 std::vector<tagTONE>	get_tone_piano88_ACF();
+std::vector<tagTONE>	get_tone_20();
 
 int main( int argc, char* argv[])
 {
@@ -164,9 +165,11 @@ int main( int argc, char* argv[])
 
 	generate_wave(freq, len, get_tone_1kHz()).save_file("Sine_1kHz.wav");
 	generate_wave(freq, len, get_tone_standard_imd()).save_file("IMD_60Hz_7kHz.wav");
+	generate_wave(freq, len, get_tone_20()).save_file("MultiTone_20.wav");
+
 	generate_wave(freq, len, get_tone_piano88()).save_file("MultiTone_piano88.wav");
 	generate_wave(freq, len, get_tone_piano88_ACDF()).save_file("MultiTone_piano88_ACD#F#.wav");
-	generate_wave(freq, len, get_tone_piano88_ACDF()).save_file("MultiTone_piano88_AC#F.wav");
+	generate_wave(freq, len, get_tone_piano88_ACF()).save_file("MultiTone_piano88_AC#F.wav");
 
 	return  0;
 }
@@ -201,6 +204,38 @@ std::vector<tagTONE>   get_tone_standard_imd()
 
 return  tone;
 }
+
+
+std::vector<tagTONE>   get_tone_20()
+{
+	std::initializer_list<tagTONE>  tone =
+	{
+		{ -20.0, 30 },
+		{ -20.0, 40 },
+		{ -20.0, 50 },
+		{ -20.0, 70 },
+		{ -20.0, 100 },
+		{ -20.0, 150 },
+		{ -20.0, 200 },
+		{ -20.0, 300 },
+		{ -20.0, 400 },
+		{ -20.0, 500 },
+		{ -20.0, 700 },
+		{ -14.0, 1000 },
+		{ -20.0, 1500 },
+		{ -20.0, 2000 },
+		{ -20.0, 3000 },
+		{ -20.0, 4000 },
+		{ -20.0, 5000 },
+		{ -20.0, 7000 },
+		{ -20.0, 10000 },
+		{ -20.0, 15000 },
+	};
+
+
+	return  tone;
+}
+
 
 std::vector<tagTONE>   get_tone_piano88()
 {
