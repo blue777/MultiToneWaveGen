@@ -128,6 +128,37 @@ public:
 				ofs.write((char*)&value, sizeof(value));
 			}
 			break;
+
+		case 16:
+			for (double v : m_data)
+			{
+				v *= INT16_MAX;
+				v = 0 <= v ? v + 0.5 : v - 0.5;
+				v64 = (int64_t)v;
+
+				int16_t value;
+				if (v64 <= INT16_MAX)
+				{
+					if (INT16_MIN <= v64)
+					{
+						value = (int32_t)v64;
+					}
+					else
+					{
+						value = INT16_MIN;
+						clip = true;
+					}
+				}
+				else
+				{
+					value = INT16_MAX;
+					clip = true;
+				}
+
+				ofs.write((char*)&value, sizeof(value));
+				ofs.write((char*)&value, sizeof(value));
+			}
+			break;
 		}
 
 		if (!clip)
@@ -174,7 +205,35 @@ WAVE    generate_wave(uint32_t sampling_freq, uint32_t duration, std::vector<tag
 	return	wave;
 }
 
-std::vector<tagTONE>	get_tone_1kHz();
+
+WAVE    generate_wave_amplitude_modulation(uint32_t sampling_freq, uint32_t duration, std::vector<tagTONE> tones)
+{
+	WAVE	wave(sampling_freq, duration);
+
+	for (auto v : tones)
+	{
+		double	scale = pow(10.0, v.gain / 20.0);
+		double	period = sampling_freq / v.freq;
+
+		for (size_t i = 0; i < wave.m_data.size(); i++)
+		{
+			double  rad = i * 2 * M_PI / period;
+
+			wave.m_data[i] += sin(rad) * scale;
+		}
+	}
+
+	for (uint32_t i = 0; i < wave.m_data.size(); i++ )
+	{
+		double	v = 0.5 + (wave.m_data[i] / 2);
+
+		wave.m_data[i] = i & 1 ? -v : v;
+	}
+
+	return	wave;
+}
+
+std::vector<tagTONE>	get_tone_single(double freq);
 std::vector<tagTONE>	get_tone_smpte_60_7000();
 std::vector<tagTONE>	get_tone_piano88();
 std::vector<tagTONE>	get_tone_32();
@@ -188,7 +247,7 @@ int main( int argc, char* argv[])
 
 	printf("How to use\n");
 	printf("\n");
-	printf("> MultiToneGenerator.exe <SamplingFreq>\n");
+	printf("> MultiToneGenerator.exe <SamplingFreq> <Duration>\n");
 	printf("\n");
 
 	if (2 <= argc)
@@ -196,22 +255,28 @@ int main( int argc, char* argv[])
 		freq = std::atoi(argv[1]);
 	}
 
-	generate_wave(freq, len, get_tone_1kHz()).save_file("1_Sine_1kHz.wav");
+	if (3 <= argc)
+	{
+		len = std::atoi(argv[2]);
+	}
+
+	generate_wave(freq, len, get_tone_single(1000)).save_file("1_Sine_1kHz.wav");
 	generate_wave(freq, len, std::vector<tagTONE>() ).save_file("2_Silent.wav");
 	generate_wave(freq, len, get_tone_smpte_60_7000()).save_file("3_SMPTE_60Hz_7kHz.wav");
 	generate_wave(freq, len, get_tone_32()).save_file("4_MultiTone_32.wav");
 	generate_wave(freq, len, get_tone_20_uneven()).save_file("5_MultiTone_20uneven.wav");
 
+	generate_wave_amplitude_modulation(freq, len, get_tone_single(100)).save_file("99_Sine_100Hz_AM.wav", 16);
 	return  0;
 }
 
 
 
-std::vector<tagTONE>   get_tone_1kHz()
+std::vector<tagTONE>   get_tone_single( double freq )
 {
 	std::initializer_list<tagTONE>  tone =
 	{
-		{ 0.0, 1000 }
+		{ 0.0, freq }
 	};
 
 	// Distortion level at sampling_freq=48k
